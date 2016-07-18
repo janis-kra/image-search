@@ -7,7 +7,15 @@ const app = express();
 const PORT = process.env.PORT || 8084;
 const CSE_ID = process.env.CSE_ID || config.searchEngineId;
 const API_KEY = process.env.API_KEY || config.apiKey;
-const databaseUrl = 'mongodb://localhost:27017/imagesearch';
+const dbCredentials = {
+  login: process.env.DB_LOGIN || '',
+  url: process.env.DB_URL || 'localhost:27017',
+  name: process.env.DB_NAME || 'imagesearch'
+}
+const databaseUrl = 'mongodb://' +
+  dbCredentials.login + '@' +
+  dbCredentials.url + '/' +
+  dbCredentials.name;
 
 let searchCollection;
 
