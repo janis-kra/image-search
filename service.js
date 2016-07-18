@@ -9,11 +9,14 @@ const CSE_ID = process.env.CSE_ID || config.searchEngineId;
 const API_KEY = process.env.API_KEY || config.apiKey;
 const databaseUrl = 'mongodb://localhost:27017/imagesearch';
 
+let searchCollection;
+
 MongoClient.connect(databaseUrl, function (err, db) {
   if (err) {
     console.log('Unable to connect to the mongoDB server. Error:', err);
   } else {
-    console.log('Connection established to', url);
+    console.log('Connection established to', databaseUrl);
+    searchCollection = db.collection('searchCollection');
   }
 });
 
@@ -26,17 +29,31 @@ const saveSearch = (query) => {
     term: query,
     when: Date.now()
   };
-  console.log('searched for: ' + search);
-}
+  searchCollection.insert(search);
+};
 
 const imageSearch = (query, page = 0) => {
   saveSearch(query);
   return google.search(query, { page: page });
-}
+};
 
 const latest = () => {
-  return JSON.stringify({ error: 'not yet implemented' });
-}
+  return new Promise((resolve, reject) => {
+    searchCollection.find({}).toArray((err, docs) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(docs
+          .sort((a, b) => b.when - a.when)
+          .splice(0, 10)
+          .map((doc) => {
+            return { term: doc.term, when: doc.when };
+          })
+        );
+      }
+    });
+  });
+};
 
 /* Routing */
 
@@ -51,8 +68,11 @@ app.get('/imagesearch/:query', (req, res) => {
 });
 
 app.get('/latest/imagesearch', (req, res) => {
-  const result = latest();
-  res.json(result);
+  latest().then((searches) => {
+    res.json(JSON.stringify(searches));
+  }).catch((error) => {
+    res.error(error);
+  });
 });
 
 app.listen(PORT, () => {
