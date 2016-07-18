@@ -13,6 +13,9 @@
   },
   "author": "Janis Krasemann",
   "license": "MIT",
+  "engines": {
+    "node": "> 6.0"
+  },
   "dependencies": {
     "express": "^4.14.0",
     "google-images": "^1.0.0",
