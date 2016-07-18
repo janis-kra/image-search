@@ -1,8 +1,13 @@
 const MongoClient = require('mongodb').MongoClient;
 const express = require('express');
 const googleImages = require('google-images');
-const config = require('./searchengine');
-
+let config;
+try {
+  config = require('./searchengine');
+} catch (e) {
+  // try to use env variables
+  config = {};
+}
 const app = express();
 const PORT = process.env.PORT || 8084;
 const CSE_ID = process.env.CSE_ID || config.searchEngineId;
